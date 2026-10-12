@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checks: {
+        Row: {
+          check_numero: number
+          created_at: string
+          fase: number
+          id: string
+          reset_at: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          check_numero: number
+          created_at?: string
+          fase: number
+          id?: string
+          reset_at?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          check_numero?: number
+          created_at?: string
+          fase?: number
+          id?: string
+          reset_at?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          check_numero: number | null
+          concluida_em: string
+          created_at: string
+          duracao_min: number
+          fase: number | null
+          humor: number | null
+          id: string
+          nota: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          check_numero?: number | null
+          concluida_em?: string
+          created_at?: string
+          duracao_min: number
+          fase?: number | null
+          humor?: number | null
+          id?: string
+          nota?: string | null
+          tipo: string
+          user_id?: string
+        }
+        Update: {
+          check_numero?: number | null
+          concluida_em?: string
+          created_at?: string
+          duracao_min?: number
+          fase?: number | null
+          humor?: number | null
+          id?: string
+          nota?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
