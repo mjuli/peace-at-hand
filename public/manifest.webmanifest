@@ -1,0 +1,17 @@
+{
+  "name": "Bambu — Meditação",
+  "short_name": "Bambu",
+  "description": "Uma jornada de meditação que cresce como um bambu.",
+  "lang": "pt-BR",
+  "start_url": "/jornada",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121512",
+  "theme_color": "#121512",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
