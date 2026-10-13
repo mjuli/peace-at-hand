@@ -91,6 +91,45 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          ambient: string
+          ambient_volume: number
+          bell_end: string
+          bell_start: string
+          bell_volume: number
+          prep_seconds: number
+          return_days: number
+          return_dismissed_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ambient?: string
+          ambient_volume?: number
+          bell_end?: string
+          bell_start?: string
+          bell_volume?: number
+          prep_seconds?: number
+          return_days?: number
+          return_dismissed_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ambient?: string
+          ambient_volume?: number
+          bell_end?: string
+          bell_start?: string
+          bell_volume?: number
+          prep_seconds?: number
+          return_days?: number
+          return_dismissed_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
