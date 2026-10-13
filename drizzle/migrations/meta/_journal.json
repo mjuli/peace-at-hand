@@ -8,6 +8,13 @@
       "when": 1791815805075,
       "tag": "0000_bambu_core",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791919578175,
+      "tag": "0001_user_settings",
+      "breakpoints": true
     }
   ]
 }
