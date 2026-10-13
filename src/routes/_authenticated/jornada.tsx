@@ -1,12 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { TabShell } from "@/components/TabShell";
 import { CheckDots } from "@/components/CheckDots";
 import { ResetActions } from "@/components/ResetActions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { activeChecksQuery } from "@/lib/journey-data";
+import { activeChecksQuery, resetAll } from "@/lib/journey-data";
 import { PHASES, progressFromCount } from "@/lib/journey";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +31,7 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 });
 
 function Jornada() {
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery(activeChecksQuery);
   const p = progressFromCount(data?.length ?? 0);
   const [menu, setMenu] = useState(false);
@@ -143,15 +154,26 @@ function Jornada() {
         </SheetContent>
       </Sheet>
 
-      <Sheet open={restart} onOpenChange={setRestart}>
-        <SheetContent side="bottom" className="rounded-t-3xl border-border bg-background px-4 pb-10">
-          <SheetHeader>
-            <SheetTitle className="font-display text-2xl font-light">Recomeçar a jornada</SheetTitle>
-          </SheetHeader>
-          <p className="mb-4 px-1 text-sm text-muted-foreground">Use "Resetar toda a jornada" para voltar à fase 3. Seu histórico é mantido.</p>
-          <ResetActions currentPhase={p.phase} onDone={() => setRestart(false)} />
-        </SheetContent>
-      </Sheet>
+      <AlertDialog open={restart} onOpenChange={setRestart}>
+        <AlertDialogContent className="rounded-3xl border-border bg-card">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display text-2xl font-light">Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>A jornada volta para a fase 3. Seu histórico de sessões é mantido.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-full"
+              onClick={async () => {
+                await resetAll();
+                await qc.invalidateQueries({ queryKey: ["checks"] });
+              }}
+            >
+              Recomeçar a jornada
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </TabShell>
   );
 }
