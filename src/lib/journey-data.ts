@@ -69,11 +69,12 @@ export async function undoLastCheck() {
     .order("created_at", { ascending: false })
     .limit(1);
   if (error) throw error;
-  if (!data?.length) return;
+  const last = data?.[0];
+  if (!last) return;
   const { error: e2 } = await supabase
     .from("checks")
     .update({ reset_at: new Date().toISOString() })
-    .eq("id", data[0].id);
+    .eq("id", last.id);
   if (e2) throw e2;
 }
 
