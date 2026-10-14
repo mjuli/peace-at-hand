@@ -75,8 +75,8 @@ export function ManualPracticeSheet({
 
   async function submit() {
     const when = new Date(`${date}T${time}`);
-    if (Number.isNaN(when.getTime())) return toast.error("Data ou horário inválido.");
-    if (when.getTime() > Date.now() + 60_000) return toast.error("A prática não pode estar no futuro.");
+    if (Number.isNaN(when.getTime())) { toast.error("Data ou horário inválido."); return; }
+    if (when.getTime() > Date.now() + 60_000) { toast.error("A prática não pode estar no futuro."); return; }
     setBusy(true);
     try {
       await recordSession({ tipo: "manual", durationMin: effectiveMin, concluidaEm: when.toISOString(), countCheck: asCheck && !!next });

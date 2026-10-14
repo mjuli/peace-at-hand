@@ -1,0 +1,1 @@
+Coloque aqui arquivos de áudio (mp3) e registre-os em AMBIENT_FILES / BELL_FILES em src/lib/bell.ts.
