@@ -117,6 +117,7 @@ function Jornada() {
               <div className="mt-4 flex gap-3">
                 <Link
                   to="/meditar"
+                  search={{ tipo: "jornada" }}
                   className="flex-1 rounded-full bg-primary py-4 text-center text-base text-primary-foreground"
                 >
                   Meditar
@@ -141,6 +142,7 @@ function Jornada() {
               </div>
               <Link
                 to="/meditar"
+                  search={{ tipo: "jornada" }}
                 className="mt-5 block rounded-full bg-primary py-4 text-center text-base tracking-wide text-primary-foreground transition-opacity duration-500 active:opacity-80"
               >
                 Meditar
