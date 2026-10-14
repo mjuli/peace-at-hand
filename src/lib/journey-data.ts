@@ -31,19 +31,25 @@ async function countActive(): Promise<number> {
   return count ?? 0;
 }
 
-/** Registra uma sessão concluída e, se houver, o próximo check. */
-export async function completeJourneySession(durationMin: number) {
+/** Registra uma sessão. Para 'jornada', marca o próximo check; para 'manual', só se countCheck. */
+export async function recordSession(opts: {
+  tipo: "jornada" | "livre" | "manual";
+  durationMin: number;
+  concluidaEm?: string;
+  countCheck?: boolean;
+}) {
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("Sessão expirada");
-  const count = await countActive();
-  const next = nextCheck(count);
+  const counts = opts.tipo === "jornada" || (opts.tipo === "manual" && !!opts.countCheck);
+  const next = counts ? nextCheck(await countActive()) : null;
   const { data: session, error } = await supabase
     .from("sessions")
     .insert({
       user_id: u.user.id,
-      tipo: "jornada",
-      duracao_min: durationMin,
-      fase: next?.phase ?? 30,
+      tipo: opts.tipo,
+      duracao_min: opts.durationMin,
+      concluida_em: opts.concluidaEm ?? new Date().toISOString(),
+      fase: opts.tipo === "jornada" ? (next?.phase ?? 30) : (next?.phase ?? null),
       check_numero: next?.number ?? null,
     })
     .select("id")
@@ -58,8 +64,26 @@ export async function completeJourneySession(durationMin: number) {
     });
     if (e2) throw e2;
   }
-  return { next, countAfter: next ? count + 1 : count };
+  return { sessionId: session.id, next };
 }
+
+export async function saveReflection(sessionId: string, humor: number | null, nota: string | null) {
+  const { error } = await supabase.from("sessions").update({ humor, nota }).eq("id", sessionId);
+  if (error) throw error;
+}
+
+export const lastPracticeQuery = queryOptions({
+  queryKey: ["sessions", "last"],
+  queryFn: async (): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("concluida_em")
+      .order("concluida_em", { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    return data?.[0]?.concluida_em ?? null;
+  },
+});
 
 export async function undoLastCheck() {
   const { data, error } = await supabase
