@@ -15,6 +15,7 @@ import { MoreHorizontal } from "lucide-react";
 import { TabShell } from "@/components/TabShell";
 import { CheckDots } from "@/components/CheckDots";
 import { ResetActions } from "@/components/ResetActions";
+import { FreeSessionSheet, ManualPracticeSheet, ReturnBanner } from "@/components/JourneyExtras";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { activeChecksQuery, resetAll } from "@/lib/journey-data";
 import { PHASES, progressFromCount } from "@/lib/journey";
@@ -36,6 +37,8 @@ function Jornada() {
   const p = progressFromCount(data?.length ?? 0);
   const [menu, setMenu] = useState(false);
   const [restart, setRestart] = useState(false);
+  const [free, setFree] = useState(false);
+  const [manual, setManual] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const currentRef = useRef<HTMLButtonElement>(null);
 
@@ -66,8 +69,10 @@ function Jornada() {
         <p className="mt-2 text-xs text-muted-foreground">{p.percent}% da jornada</p>
       </div>
 
+      <ReturnBanner phase={p.phase} />
+
       {/* caule */}
-      <section className="flex flex-col-reverse items-center gap-[3px] px-6 pt-10 pb-72">
+      <section className="flex flex-col-reverse items-center gap-[3px] px-6 pt-10 pb-96">
         {PHASES.map((phase) => {
           const state = p.complete || phase < p.phase ? "done" : phase === p.phase ? "current" : "future";
           const open = selected === phase;
@@ -142,6 +147,11 @@ function Jornada() {
               </Link>
             </>
           )}
+          <div className="mt-3 flex justify-center gap-6 text-sm text-muted-foreground">
+            <button onClick={() => setFree(true)} className="py-2">Sessão livre</button>
+            <span className="py-2 opacity-30">·</span>
+            <button onClick={() => setManual(true)} className="py-2">Registrar prática manual</button>
+          </div>
         </div>
       </div>
 
@@ -153,6 +163,9 @@ function Jornada() {
           <ResetActions currentPhase={p.phase} onDone={() => setMenu(false)} />
         </SheetContent>
       </Sheet>
+
+      <FreeSessionSheet open={free} onOpenChange={setFree} />
+      <ManualPracticeSheet open={manual} onOpenChange={setManual} activeCount={data?.length ?? 0} />
 
       <AlertDialog open={restart} onOpenChange={setRestart}>
         <AlertDialogContent className="rounded-3xl border-border bg-card">
