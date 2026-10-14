@@ -36,7 +36,7 @@ function OptionRow({
   label: string;
   selected: boolean;
   onSelect: () => void;
-  onPreview?: () => void;
+  onPreview?: (() => void) | undefined;
 }) {
   return (
     <li className="flex items-center">
