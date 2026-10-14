@@ -11,19 +11,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { activeChecksQuery, completeJourneySession } from "@/lib/journey-data";
+import { z } from "zod";
+import { activeChecksQuery, recordSession, saveReflection } from "@/lib/journey-data";
 import { nextDuration } from "@/lib/journey";
-import { playBell, unlockAudio } from "@/lib/bell";
+import { playBell, startAmbient, unlockAudio, type AmbientHandle } from "@/lib/bell";
+import { settingsQuery } from "@/lib/settings";
+import { toast } from "sonner";
+import { Frown, Meh, Smile, Annoyed, Laugh } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/meditar")({
   head: () => ({ meta: [{ title: "Meditar · Bambu" }, { name: "description", content: "Sessão de meditação." }] }),
+  validateSearch: z.object({
+    tipo: z.enum(["jornada", "livre"]).catch("jornada").default("jornada"),
+    min: z.coerce.number().int().min(1).max(120).optional().catch(undefined),
+  }),
   component: Meditar,
 });
 
-const PREP_MS = 10_000;
 type Phase = "prep" | "running" | "paused" | "saving" | "done" | "error";
-type Result = { next: { phase: number; number: number } | null };
+type Result = { sessionId: string; tipo: "jornada" | "livre"; minutes: number; next: { phase: number; number: number } | null };
 
 function fmt(ms: number) {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -55,8 +62,12 @@ function useWakeLock(active: boolean) {
 function Meditar() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { tipo, min } = Route.useSearch();
   const { data } = useQuery(activeChecksQuery);
-  const durationMin = data ? nextDuration(data.length) : null;
+  const { data: settings } = useQuery(settingsQuery);
+  const durationMin = !settings ? null : tipo === "livre" ? (min ?? 10) : data ? nextDuration(data.length) : null;
+  const ambient = useRef<AmbientHandle | null>(null);
+  useEffect(() => () => ambient.current?.stop(), []);
 
   const [phase, setPhase] = useState<Phase>("prep");
   const [now, setNow] = useState(() => Date.now());
@@ -74,22 +85,27 @@ function Meditar() {
   useEffect(() => {
     if (durationMin == null || prepEnd.current) return;
     unlockAudio();
-    prepEnd.current = Date.now() + PREP_MS;
+    prepEnd.current = Date.now() + (settings?.prep_seconds ?? 10) * 1000 + 1;
   }, [durationMin]);
 
   const finish = useCallback(async () => {
     if (durationMin == null) return;
-    playBell();
+    if (phase === "running") {
+      playBell(settings?.bell_end, settings?.bell_volume);
+      ambient.current?.stop();
+      ambient.current = null;
+    }
     setPhase("saving");
     try {
-      const r = await completeJourneySession(durationMin);
+      const r = await recordSession({ tipo, durationMin });
       await qc.invalidateQueries({ queryKey: ["checks"] });
-      setResult({ next: r.next });
+      await qc.invalidateQueries({ queryKey: ["sessions"] });
+      setResult({ sessionId: r.sessionId, tipo, minutes: durationMin, next: r.next });
       setPhase("done");
     } catch {
       setPhase("error");
     }
-  }, [durationMin, qc]);
+  }, [durationMin, qc, tipo, settings, phase]);
 
   // relógio baseado em timestamps
   useEffect(() => {
@@ -99,14 +115,15 @@ function Meditar() {
       setNow(t);
       if (phase === "prep" && prepEnd.current && t >= prepEnd.current && durationMin != null) {
         endAt.current = t + durationMin * 60_000;
-        playBell();
+        playBell(settings?.bell_start, settings?.bell_volume);
+        if (settings) ambient.current = startAmbient(settings.ambient, settings.ambient_volume);
         setPhase("running");
       } else if (phase === "running" && t >= endAt.current) {
         void finish();
       }
     }, 200);
     return () => clearInterval(id);
-  }, [phase, durationMin, finish]);
+  }, [phase, durationMin, finish, settings]);
 
   function reveal() {
     unlockAudio();
@@ -119,10 +136,12 @@ function Meditar() {
   function togglePause() {
     if (phase === "running") {
       remainingOnPause.current = endAt.current - Date.now();
+      ambient.current?.pause();
       setPhase("paused");
     } else if (phase === "paused") {
       endAt.current = Date.now() + remainingOnPause.current;
       setNow(Date.now());
+      ambient.current?.resume();
       setPhase("running");
     }
     reveal();
@@ -132,7 +151,7 @@ function Meditar() {
 
   const display =
     phase === "prep"
-      ? Math.max(0, Math.ceil((prepEnd.current - now) / 1000)).toString()
+      ? Math.max(0, Math.ceil((prepEnd.current - now) / 1000)).toString().replace(/^0$/, "")
       : phase === "paused"
         ? fmt(remainingOnPause.current)
         : phase === "running"
@@ -211,15 +230,44 @@ function Meditar() {
   );
 }
 
+const MOODS = [
+  { v: 1, icon: Frown, label: "Difícil" },
+  { v: 2, icon: Annoyed, label: "Inquieto" },
+  { v: 3, icon: Meh, label: "Neutro" },
+  { v: 4, icon: Smile, label: "Bem" },
+  { v: 5, icon: Laugh, label: "Ótimo" },
+];
+
 function PostSession({ result, onBack }: { result: Result; onBack: () => void }) {
   const n = result.next;
   const phaseDone = n && n.number === n.phase;
   const journeyDone = n && n.phase === 30 && n.number === 30;
+  const [showReflect, setShowReflect] = useState(false);
+  const [humor, setHumor] = useState<number | null>(null);
+  const [nota, setNota] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowReflect(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
+
+  async function save() {
+    if (humor == null && !nota.trim()) return onBack();
+    setSaving(true);
+    try {
+      await saveReflection(result.sessionId, humor, nota.trim() || null);
+      onBack();
+    } catch {
+      toast.error("Não foi possível salvar. Tente de novo.");
+      setSaving(false);
+    }
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-background px-8 text-center">
+    <div className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto bg-background px-8 pt-[14vh] pb-40 text-center">
       {(phaseDone || journeyDone) && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
@@ -236,11 +284,11 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
         {journeyDone ? (
           <>
             <h1 className="mt-10 font-display text-5xl font-light">Jornada completa</h1>
-            <p className="mt-4 text-sm text-muted-foreground">
-              462 checks. De 3 a 30 minutos. Seu bambu cresceu inteiro.
-            </p>
+            <p className="mt-4 text-sm text-muted-foreground">462 checks. De 3 a 30 minutos. Seu bambu cresceu inteiro.</p>
             <p className="mt-2 text-sm text-muted-foreground">Continue praticando com sessões de 30 minutos.</p>
           </>
+        ) : result.tipo === "livre" ? (
+          <p className="mt-10 text-lg">Sessão livre de {result.minutes} min registrada ✓</p>
         ) : n ? (
           <>
             <p className="mt-10 text-lg">
@@ -259,12 +307,47 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
           <p className="mt-10 text-lg">Sessão de 30 minutos registrada ✓</p>
         )}
       </div>
-      <button
-        onClick={onBack}
-        className="fixed inset-x-6 bottom-10 mx-auto max-w-md rounded-full bg-primary py-4 text-base text-primary-foreground animate-fade-slow"
-      >
-        Voltar à Jornada
-      </button>
+
+      {showReflect && (
+        <div className="relative mt-12 w-full max-w-sm animate-rise">
+          <p className="text-sm text-muted-foreground">Como você se sente?</p>
+          <div className="mt-4 flex justify-between">
+            {MOODS.map(({ v, icon: Icon, label }) => (
+              <button
+                key={v}
+                aria-label={label}
+                onClick={() => setHumor(humor === v ? null : v)}
+                className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-500",
+                  humor === v ? "border-sage bg-sage-soft text-sage" : "border-border text-muted-foreground",
+                )}
+              >
+                <Icon className="h-6 w-6" strokeWidth={1.3} />
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={nota}
+            onChange={(e) => setNota(e.target.value.slice(0, 280))}
+            placeholder="Uma nota curta (opcional)"
+            rows={3}
+            className="mt-6 w-full resize-none rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-sage"
+          />
+        </div>
+      )}
+
+      <div className="fixed inset-x-6 bottom-8 mx-auto flex max-w-md gap-3 animate-fade-slow">
+        <button onClick={onBack} className="flex-1 rounded-full border border-border py-4 text-base text-muted-foreground">
+          Pular
+        </button>
+        <button
+          onClick={() => void save()}
+          disabled={saving}
+          className="flex-1 rounded-full bg-primary py-4 text-base text-primary-foreground disabled:opacity-60"
+        >
+          {saving ? "Salvando…" : "Salvar"}
+        </button>
+      </div>
     </div>
   );
 }
