@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { z } from "zod";
 import { activeChecksQuery, recordSession, saveReflection } from "@/lib/journey-data";
+import { syncAchievements } from "@/lib/history-data";
+import type { AchievementDef } from "@/lib/achievements";
 import { nextDuration } from "@/lib/journey";
 import { playBell, startAmbient, unlockAudio, type AmbientHandle } from "@/lib/bell";
 import { settingsQuery } from "@/lib/settings";
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/meditar")({
 });
 
 type Phase = "prep" | "running" | "paused" | "saving" | "done" | "error";
-type Result = { sessionId: string; tipo: "jornada" | "livre"; minutes: number; next: { phase: number; number: number } | null };
+type Result = { sessionId: string; tipo: "jornada" | "livre"; minutes: number; next: { phase: number; number: number } | null; unlocked: AchievementDef[] };
 
 function fmt(ms: number) {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -100,7 +102,8 @@ function Meditar() {
       const r = await recordSession({ tipo, durationMin });
       await qc.invalidateQueries({ queryKey: ["checks"] });
       await qc.invalidateQueries({ queryKey: ["sessions"] });
-      setResult({ sessionId: r.sessionId, tipo, minutes: durationMin, next: r.next });
+      const unlocked = await syncAchievements(qc).catch(() => [] as AchievementDef[]);
+      setResult({ sessionId: r.sessionId, tipo, minutes: durationMin, next: r.next, unlocked });
       setPhase("done");
     } catch {
       setPhase("error");
@@ -257,6 +260,8 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
     setSaving(true);
     try {
       await saveReflection(result.sessionId, humor, nota.trim() || null);
+      const extra = await syncAchievements().catch(() => [] as AchievementDef[]);
+      extra.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao }));
       onBack();
     } catch {
       toast.error("Não foi possível salvar. Tente de novo.");
@@ -278,6 +283,14 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
         </div>
       )}
       <div className="relative animate-rise">
+        {result.unlocked.length > 0 && (
+          <div className="mx-auto mb-8 max-w-xs rounded-2xl border border-sage/40 px-4 py-3 text-sm animate-fade-slow">
+            <p className="text-[11px] tracking-wide text-sage">Conquista desbloqueada</p>
+            {result.unlocked.map((a) => (
+              <p key={a.codigo} className="mt-1 font-display text-xl font-light">{a.nome}</p>
+            ))}
+          </div>
+        )}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-sage text-3xl text-sage glow-sage">
           ✓
         </div>
