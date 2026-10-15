@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          codigo: string
+          desbloqueada_em: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          codigo: string
+          desbloqueada_em?: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          codigo?: string
+          desbloqueada_em?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       checks: {
         Row: {
           check_numero: number

@@ -15,6 +15,13 @@
       "when": 1791919578175,
       "tag": "0001_user_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792064518091,
+      "tag": "0002_achievements",
+      "breakpoints": true
     }
   ]
 }
