@@ -13,6 +13,10 @@ export interface SessionRow {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
+function parseKey(k: string): Date {
+  const [y = 0, mo = 1, da = 1] = k.split("-").map(Number);
+  return new Date(y, mo - 1, da);
+}
 export function dayKey(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
@@ -53,8 +57,7 @@ export function streaks(days: Set<string>, today: Date) {
   let run = 0;
   let prev: Date | null = null;
   for (const k of sorted) {
-    const [y, mo, da] = k.split("-").map(Number);
-    const dt = new Date(y, mo - 1, da);
+    const dt = parseKey(k);
     run = prev && dayKey(addDays(prev, 1)) === k ? run + 1 : 1;
     best = Math.max(best, run);
     prev = dt;
@@ -64,9 +67,8 @@ export function streaks(days: Set<string>, today: Date) {
 
 export function avgDaysPerWeek(days: Set<string>, today: Date): number {
   if (days.size === 0) return 0;
-  const first = [...days].sort()[0];
-  const [y, mo, da] = first.split("-").map(Number);
-  const span = Math.round((addDays(today, 0).getTime() - new Date(y, mo - 1, da).getTime()) / 86400000) + 1;
+  const first = parseKey([...days].sort()[0] ?? dayKey(today));
+  const span = Math.round((addDays(today, 0).getTime() - first.getTime()) / 86400000) + 1;
   const weeks = Math.max(1, span / 7);
   return Math.min(7, days.size / weeks);
 }

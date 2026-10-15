@@ -107,7 +107,7 @@ function Historico() {
           <Card label="Sessões" value={String(sessions.length)} />
           <Card label="Jornada" value={`${prog.percent}%`} sub={`${prog.totalDone} de 462 checks`} />
           <Card label="Dias por semana" value={avgDaysPerWeek(days, today).toFixed(1).replace(".", ",")} sub="em média" />
-          <Card label="Período preferido" value={period ? period[0].toUpperCase() + period.slice(1) : "—"} />
+          <Card label="Período preferido" value={period ? period.charAt(0).toUpperCase() + period.slice(1) : "—"} />
           <Card
             label={`Fase ${prog.phase}`}
             value={prog.complete ? "Completa" : est ? est.toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
