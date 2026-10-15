@@ -13,7 +13,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { TabShell } from "@/components/TabShell";
-import { syncAchievements } from "@/lib/history-data";
+import { allSessionsQuery, syncAchievements } from "@/lib/history-data";
 import { toast } from "sonner";
 import { CheckDots } from "@/components/CheckDots";
 import { ResetActions } from "@/components/ResetActions";
@@ -35,12 +35,12 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 
 function Jornada() {
   const qc = useQueryClient();
-  const { data: lastAt } = useQuery(lastPracticeQueryForSync);
+  const { data: lastAt } = useQuery(allSessionsQuery);
   useEffect(() => {
     void syncAchievements(qc)
       .then((list) => list.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao })))
       .catch(() => {});
-  }, [qc, lastAt]);
+  }, [qc, lastAt?.length]);
   const { data, isLoading } = useQuery(activeChecksQuery);
   const p = progressFromCount(data?.length ?? 0);
   const [menu, setMenu] = useState(false);
