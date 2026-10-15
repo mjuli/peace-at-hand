@@ -13,6 +13,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { TabShell } from "@/components/TabShell";
+import { syncAchievements } from "@/lib/history-data";
+import { toast } from "sonner";
 import { CheckDots } from "@/components/CheckDots";
 import { ResetActions } from "@/components/ResetActions";
 import { FreeSessionSheet, ManualPracticeSheet, ReturnBanner } from "@/components/JourneyExtras";
