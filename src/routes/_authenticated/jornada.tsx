@@ -35,6 +35,12 @@ export const Route = createFileRoute("/_authenticated/jornada")({
 
 function Jornada() {
   const qc = useQueryClient();
+  const { data: lastAt } = useQuery(lastPracticeQueryForSync);
+  useEffect(() => {
+    void syncAchievements(qc)
+      .then((list) => list.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao })))
+      .catch(() => {});
+  }, [qc, lastAt]);
   const { data, isLoading } = useQuery(activeChecksQuery);
   const p = progressFromCount(data?.length ?? 0);
   const [menu, setMenu] = useState(false);
