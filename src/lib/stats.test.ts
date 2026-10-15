@@ -33,8 +33,8 @@ describe("achievements", () => {
     expect(c.has("metade")).toBe(false);
   });
   it("half journey at check 231", () => {
-    // checksBefore(23) = 229 → fase 23 check 2 = 231
-    expect(earnedCodes([], [{ fase: 23, check_numero: 2 }]).has("metade")).toBe(true);
-    expect(earnedCodes([], [{ fase: 23, check_numero: 1 }]).has("metade")).toBe(false);
+    // checksBefore(22) = 228 → fase 22 check 3 = 231
+    expect(earnedCodes([], [{ fase: 22, check_numero: 3 }]).has("metade")).toBe(true);
+    expect(earnedCodes([], [{ fase: 22, check_numero: 2 }]).has("metade")).toBe(false);
   });
 });
