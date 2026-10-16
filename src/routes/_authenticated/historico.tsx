@@ -8,6 +8,7 @@ import { activeChecksQuery } from "@/lib/journey-data";
 import { progressFromCount } from "@/lib/journey";
 import { avgDaysPerWeek, dayKey, favoritePeriod, heatLevel, journeyEstimate, minutesByDay, streaks } from "@/lib/stats";
 import { cn } from "@/lib/utils";
+import { formatMinutes, totalMinutes } from "@/lib/extra-time";
 
 export const Route = createFileRoute("/_authenticated/historico")({
   head: () => ({ meta: [{ title: "Histórico · Bambu" }, { name: "description", content: "Seu histórico de práticas." }] }),
@@ -29,7 +30,7 @@ function Historico() {
   const byDay = useMemo(() => minutesByDay(sessions), [sessions]);
   const days = useMemo(() => new Set(byDay.keys()), [byDay]);
   const st = streaks(days, today);
-  const totalMin = sessions.reduce((s, x) => s + x.duracao_min, 0);
+  const totalMin = sessions.reduce((s, x) => s + totalMinutes(x), 0);
   const prog = progressFromCount(checks.length);
   const est = journeyEstimate(checks.map((c) => c.created_at), today);
   const period = favoritePeriod(sessions);
@@ -85,7 +86,7 @@ function Historico() {
                   return (
                     <li key={s.id} className="py-3 text-sm">
                       <div className="flex items-center justify-between">
-                        <span>{TIPO[s.tipo] ?? s.tipo} · {s.duracao_min} min</span>
+                        <span className="min-w-0 flex-1">{TIPO[s.tipo] ?? s.tipo} · {(s.extra_seconds ?? 0) > 0 ? `${s.planned_minutes} min + ${formatMinutes((s.extra_seconds ?? 0) / 60)} min extra` : `${formatMinutes(totalMinutes(s))} min`}</span>
                         <span className="flex items-center gap-2 text-muted-foreground">
                           {M && <M className="h-4 w-4 text-sage" strokeWidth={1.4} />}
                           {new Date(s.concluida_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
@@ -103,7 +104,7 @@ function Historico() {
         <div className="mt-8 grid grid-cols-2 gap-3">
           <Card label="Sequência atual" value={`${st.current} ${st.current === 1 ? "dia" : "dias"}`} />
           <Card label="Maior sequência" value={`${st.longest} ${st.longest === 1 ? "dia" : "dias"}`} />
-          <Card label="Tempo total" value={`${totalMin} min`} sub={`${(totalMin / 60).toFixed(1).replace(".", ",")} horas`} />
+          <Card label="Tempo total" value={`${formatMinutes(totalMin)} min`} sub={`${(totalMin / 60).toFixed(1).replace(".", ",")} horas`} />
           <Card label="Sessões" value={String(sessions.length)} />
           <Card label="Jornada" value={`${prog.percent}%`} sub={`${prog.totalDone} de 462 checks`} />
           <Card label="Dias por semana" value={avgDaysPerWeek(days, today).toFixed(1).replace(".", ",")} sub="em média" />

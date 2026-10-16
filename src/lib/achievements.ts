@@ -1,5 +1,6 @@
 // Definições e avaliação pura das conquistas.
 import { checksBefore } from "./journey";
+import { totalMinutes } from "./extra-time";
 import { dayKey, streaks, type SessionRow } from "./stats";
 
 export interface CheckRow {
@@ -43,7 +44,7 @@ export function earnedCodes(sessions: SessionRow[], checks: CheckRow[], today = 
   const out = new Set<string>();
   const add = (cond: boolean, c: string) => cond && out.add(c);
   const n = sessions.length;
-  const minutes = sessions.reduce((s, x) => s + x.duracao_min, 0);
+  const minutes = sessions.reduce((s, x) => s + totalMinutes(x), 0);
   const maxPhase = checks.reduce((m, c) => Math.max(m, c.fase), 0);
   const maxOrdinal = checks.reduce((m, c) => Math.max(m, checksBefore(c.fase) + c.check_numero), 0);
   const longest = streaks(new Set(sessions.map((s) => dayKey(new Date(s.concluida_em)))), today).longest;

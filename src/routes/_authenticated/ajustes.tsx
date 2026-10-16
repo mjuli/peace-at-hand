@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { TabShell } from "@/components/TabShell";
 import { ResetActions } from "@/components/ResetActions";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { activeChecksQuery } from "@/lib/journey-data";
 import { progressFromCount } from "@/lib/journey";
 import { AMBIENTS, BELLS, playBell, previewAmbient, type AmbientHandle } from "@/lib/bell";
@@ -160,6 +161,10 @@ function Ajustes() {
         </Section>
 
         <Section title="Sessão">
+          <div className="mb-3 flex items-center justify-between gap-4 px-5 py-4">
+            <label htmlFor="count-up" className="text-sm">Continuar contando após o fim</label>
+            <Switch id="count-up" checked={s.count_up} onCheckedChange={(checked) => void update({ count_up: checked })} />
+          </div>
           <div className="rounded-2xl bg-card px-5 py-5">
             <p className="mb-4 text-sm text-muted-foreground">Contagem de preparação</p>
             <div className="grid grid-cols-5 gap-2">

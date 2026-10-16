@@ -1,10 +1,13 @@
 // Métricas puras do Histórico. Datas são agrupadas pelo fuso local do aparelho.
 import { TOTAL_CHECKS } from "./journey";
+import { totalMinutes } from "./extra-time";
 
 export interface SessionRow {
   id: string;
   tipo: string;
   duracao_min: number;
+  planned_minutes?: number | null;
+  extra_seconds?: number;
   concluida_em: string;
   fase: number | null;
   check_numero: number | null;
@@ -30,7 +33,7 @@ export function minutesByDay(sessions: SessionRow[]): Map<string, number> {
   const m = new Map<string, number>();
   for (const s of sessions) {
     const k = dayKey(new Date(s.concluida_em));
-    m.set(k, (m.get(k) ?? 0) + s.duracao_min);
+    m.set(k, (m.get(k) ?? 0) + totalMinutes(s));
   }
   return m;
 }

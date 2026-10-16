@@ -9,6 +9,7 @@ export interface Settings {
   ambient: AmbientKind;
   ambient_volume: number;
   prep_seconds: number;
+  count_up: boolean;
   return_days: number;
   return_dismissed_at: string | null;
 }
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ambient: "silencio",
   ambient_volume: 0.5,
   prep_seconds: 10,
+  count_up: true,
   return_days: 7,
   return_dismissed_at: null,
 };
