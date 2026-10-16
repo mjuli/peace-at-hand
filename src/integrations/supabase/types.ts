@@ -79,10 +79,12 @@ export type Database = {
           concluida_em: string
           created_at: string
           duracao_min: number
+          extra_seconds: number
           fase: number | null
           humor: number | null
           id: string
           nota: string | null
+          planned_minutes: number | null
           tipo: string
           user_id: string
         }
@@ -91,10 +93,12 @@ export type Database = {
           concluida_em?: string
           created_at?: string
           duracao_min: number
+          extra_seconds?: number
           fase?: number | null
           humor?: number | null
           id?: string
           nota?: string | null
+          planned_minutes?: number | null
           tipo: string
           user_id?: string
         }
@@ -103,10 +107,12 @@ export type Database = {
           concluida_em?: string
           created_at?: string
           duracao_min?: number
+          extra_seconds?: number
           fase?: number | null
           humor?: number | null
           id?: string
           nota?: string | null
+          planned_minutes?: number | null
           tipo?: string
           user_id?: string
         }
@@ -119,6 +125,7 @@ export type Database = {
           bell_end: string
           bell_start: string
           bell_volume: number
+          count_up: boolean
           prep_seconds: number
           return_days: number
           return_dismissed_at: string | null
@@ -131,6 +138,7 @@ export type Database = {
           bell_end?: string
           bell_start?: string
           bell_volume?: number
+          count_up?: boolean
           prep_seconds?: number
           return_days?: number
           return_dismissed_at?: string | null
@@ -143,6 +151,7 @@ export type Database = {
           bell_end?: string
           bell_start?: string
           bell_volume?: number
+          count_up?: boolean
           prep_seconds?: number
           return_days?: number
           return_dismissed_at?: string | null

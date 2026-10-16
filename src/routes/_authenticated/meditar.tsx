@@ -12,7 +12,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { z } from "zod";
-import { activeChecksQuery, recordSession, saveReflection } from "@/lib/journey-data";
+import { activeChecksQuery, recordSession, saveExtra, saveReflection } from "@/lib/journey-data";
+import { MAX_EXTRA_SECONDS, addedExtra, elapsedExtra } from "@/lib/extra-time";
 import { syncAchievements } from "@/lib/history-data";
 import type { AchievementDef } from "@/lib/achievements";
 import { nextDuration } from "@/lib/journey";
@@ -31,8 +32,9 @@ export const Route = createFileRoute("/_authenticated/meditar")({
   component: Meditar,
 });
 
-type Phase = "prep" | "running" | "paused" | "saving" | "done" | "error";
-type Result = { sessionId: string; tipo: "jornada" | "livre"; minutes: number; next: { phase: number; number: number } | null; unlocked: AchievementDef[] };
+type Phase = "prep" | "running" | "paused" | "extra" | "saving" | "done" | "error";
+type Saved = { sessionId: string; tipo: "jornada" | "livre"; minutes: number; next: { phase: number; number: number } | null; unlocked: AchievementDef[] };
+type Result = Saved & { extraSec: number };
 
 function fmt(ms: number) {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -80,8 +82,10 @@ function Meditar() {
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const saved = useRef<Promise<Saved> | null>(null);
+  const extraSec = useRef(0);
 
-  useWakeLock(phase === "prep" || phase === "running" || phase === "paused");
+  useWakeLock(phase === "prep" || phase === "running" || phase === "paused" || phase === "extra");
 
   // inicia preparação quando a duração for conhecida
   useEffect(() => {
@@ -90,29 +94,49 @@ function Meditar() {
     prepEnd.current = Date.now() + (settings?.prep_seconds ?? 10) * 1000 + 1;
   }, [durationMin]);
 
-  const finish = useCallback(async () => {
-    if (durationMin == null) return;
-    if (phase === "running") {
-      playBell(settings?.bell_end, settings?.bell_volume);
-      ambient.current?.stop();
-      ambient.current = null;
-    }
-    setPhase("saving");
-    try {
+  const save = useCallback(() => {
+    if (durationMin == null) return Promise.reject(new Error("sem duração"));
+    saved.current = (async () => {
       const r = await recordSession({ tipo, durationMin });
       await qc.invalidateQueries({ queryKey: ["checks"] });
       await qc.invalidateQueries({ queryKey: ["sessions"] });
       const unlocked = await syncAchievements(qc).catch(() => [] as AchievementDef[]);
-      setResult({ sessionId: r.sessionId, tipo, minutes: durationMin, next: r.next, unlocked });
+      return { sessionId: r.sessionId, tipo, minutes: durationMin, next: r.next, unlocked };
+    })();
+    return saved.current;
+  }, [durationMin, qc, tipo]);
+
+  const conclude = useCallback(async () => {
+    ambient.current?.stop();
+    ambient.current = null;
+    setPhase("saving");
+    try {
+      const r = await (saved.current ?? save());
+      setResult({ ...r, extraSec: extraSec.current });
       setPhase("done");
     } catch {
+      saved.current = null;
       setPhase("error");
     }
-  }, [durationMin, qc, tipo, settings, phase]);
+  }, [save]);
+
+  const reachPlannedEnd = useCallback(() => {
+    playBell(settings?.bell_end, settings?.bell_volume);
+    const p = save();
+    if (settings?.count_up ?? true) {
+      setPhase("extra");
+      p.catch(() => {
+        saved.current = null;
+        ambient.current?.stop();
+        ambient.current = null;
+        setPhase("error");
+      });
+    } else void conclude();
+  }, [settings, save, conclude]);
 
   // relógio baseado em timestamps
   useEffect(() => {
-    if (phase !== "prep" && phase !== "running") return;
+    if (phase !== "prep" && phase !== "running" && phase !== "extra") return;
     const id = setInterval(() => {
       const t = Date.now();
       setNow(t);
@@ -122,15 +146,18 @@ function Meditar() {
         if (settings) ambient.current = startAmbient(settings.ambient, settings.ambient_volume);
         setPhase("running");
       } else if (phase === "running" && t >= endAt.current) {
-        void finish();
+        reachPlannedEnd();
+      } else if (phase === "extra") {
+        extraSec.current = elapsedExtra(endAt.current, t);
+        if (extraSec.current >= MAX_EXTRA_SECONDS) void conclude();
       }
     }, 200);
     return () => clearInterval(id);
-  }, [phase, durationMin, finish, settings]);
+  }, [phase, durationMin, reachPlannedEnd, conclude, settings]);
 
   function reveal() {
     unlockAudio();
-    if (phase !== "running" && phase !== "paused" && phase !== "prep") return;
+    if (phase !== "running" && phase !== "paused" && phase !== "prep" && phase !== "extra") return;
     setControls(true);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setControls(false), 4000);
@@ -159,6 +186,8 @@ function Meditar() {
         ? fmt(remainingOnPause.current)
         : phase === "running"
           ? fmt(endAt.current - now)
+        : phase === "extra"
+          ? `+${fmt(Math.min(MAX_EXTRA_SECONDS * 1000, Math.max(0, now - endAt.current)))}`
           : "";
 
   return (
@@ -173,7 +202,7 @@ function Meditar() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Não foi possível salvar a sessão.</p>
-              <button onClick={() => void finish()} className="mt-6 rounded-full bg-primary px-6 py-3 text-sm text-primary-foreground">
+              <button onClick={() => void conclude()} className="mt-6 rounded-full bg-primary px-6 py-3 text-sm text-primary-foreground">
                 Tentar de novo
               </button>
             </>
@@ -185,6 +214,7 @@ function Meditar() {
             "font-sans font-[100] tabular-nums tracking-tight transition-opacity duration-1000",
             phase === "prep" ? "text-[9rem]" : "text-[5.5rem]",
             phase === "paused" && "opacity-50",
+            phase === "extra" && "text-muted-foreground",
             durationMin == null && "opacity-0",
           )}
         >
@@ -199,6 +229,12 @@ function Meditar() {
         )}
         onClick={(e) => e.stopPropagation()}
       >
+        {phase === "extra" ? (
+          <button onClick={() => void conclude()} className="mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
+            Concluir
+          </button>
+        ) : (
+          <>
         {phase !== "prep" && (
           <button onClick={togglePause} className="mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
             {phase === "paused" ? "Retomar" : "Pausar"}
@@ -213,6 +249,8 @@ function Meditar() {
         >
           Encerrar
         </button>
+          </>
+        )}
       </div>
 
       <AlertDialog open={confirmEnd} onOpenChange={setConfirmEnd}>
@@ -249,6 +287,13 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
   const [humor, setHumor] = useState<number | null>(null);
   const [nota, setNota] = useState("");
   const [saving, setSaving] = useState(false);
+  const extraMin = Math.floor(result.extraSec / 60);
+  const [addExtra, setAddExtra] = useState(true);
+
+  async function applyExtra() {
+    const extra = addedExtra(result.extraSec, addExtra);
+    if (extra > 0) await saveExtra(result.sessionId, result.minutes, extra);
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setShowReflect(true), 1800);
@@ -256,10 +301,23 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
   }, []);
 
   async function save() {
-    if (humor == null && !nota.trim()) return onBack();
     setSaving(true);
     try {
-      await saveReflection(result.sessionId, humor, nota.trim() || null);
+      await applyExtra();
+      if (humor != null || nota.trim()) await saveReflection(result.sessionId, humor, nota.trim() || null);
+      const extra = await syncAchievements().catch(() => [] as AchievementDef[]);
+      extra.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao }));
+      onBack();
+    } catch {
+      toast.error("Não foi possível salvar. Tente de novo.");
+      setSaving(false);
+    }
+  }
+
+  async function skip() {
+    setSaving(true);
+    try {
+      await applyExtra();
       const extra = await syncAchievements().catch(() => [] as AchievementDef[]);
       extra.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao }));
       onBack();
@@ -323,6 +381,18 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
 
       {showReflect && (
         <div className="relative mt-12 w-full max-w-sm animate-rise">
+          {extraMin >= 1 && (
+            <div className="mb-8 rounded-2xl border border-border p-4">
+              <p className="text-sm">Você meditou mais {extraMin} min além do planejado. Adicionar ao total?</p>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {[true, false].map((v) => (
+                  <button key={String(v)} onClick={() => setAddExtra(v)} className={cn("rounded-full border py-3 text-sm", addExtra === v ? "border-sage bg-sage text-primary-foreground" : "border-border text-muted-foreground")}>
+                    {v ? "Adicionar" : "Não adicionar"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">Como você se sente?</p>
           <div className="mt-4 flex justify-between">
             {MOODS.map(({ v, icon: Icon, label }) => (
@@ -350,7 +420,7 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
       )}
 
       <div className="fixed inset-x-6 bottom-8 mx-auto flex max-w-md gap-3 animate-fade-slow">
-        <button onClick={onBack} className="flex-1 rounded-full border border-border py-4 text-base text-muted-foreground">
+        <button onClick={() => void skip()} disabled={saving} className="flex-1 rounded-full border border-border py-4 text-base text-muted-foreground disabled:opacity-60">
           Pular
         </button>
         <button

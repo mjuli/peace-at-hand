@@ -48,6 +48,8 @@ export async function recordSession(opts: {
       user_id: u.user.id,
       tipo: opts.tipo,
       duracao_min: opts.durationMin,
+      planned_minutes: opts.durationMin,
+      extra_seconds: 0,
       concluida_em: opts.concluidaEm ?? new Date().toISOString(),
       fase: opts.tipo === "jornada" ? (next?.phase ?? 30) : (next?.phase ?? null),
       check_numero: next?.number ?? null,
@@ -69,6 +71,13 @@ export async function recordSession(opts: {
 
 export async function saveReflection(sessionId: string, humor: number | null, nota: string | null) {
   const { error } = await supabase.from("sessions").update({ humor, nota }).eq("id", sessionId);
+  if (error) throw error;
+}
+
+export async function saveExtra(sessionId: string, planned: number, extraSeconds: number) {
+  const { error } = await supabase.from("sessions")
+    .update({ extra_seconds: extraSeconds, duracao_min: planned + Math.floor(extraSeconds / 60) })
+    .eq("id", sessionId).neq("tipo", "manual");
   if (error) throw error;
 }
 

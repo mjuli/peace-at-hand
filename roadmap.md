@@ -1,0 +1,3 @@
+- [ ] Registrar conclusão planejada e tempo extra opcional, sem checks adicionais.
+- [ ] Ajuste de contagem, pós-sessão e Histórico com duração total.
+- [ ] Testes das regras e verificação do fluxo autenticado.

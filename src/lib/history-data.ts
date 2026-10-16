@@ -6,7 +6,7 @@ import { ACHIEVEMENTS, earnedCodes, type AchievementDef, type CheckRow } from ".
 async function fetchSessions(): Promise<SessionRow[]> {
   const { data, error } = await supabase
     .from("sessions")
-    .select("id, tipo, duracao_min, concluida_em, fase, check_numero, humor, nota")
+    .select("id, tipo, duracao_min, planned_minutes, extra_seconds, concluida_em, fase, check_numero, humor, nota")
     .order("concluida_em", { ascending: true })
     .range(0, 9999);
   if (error) throw error;
