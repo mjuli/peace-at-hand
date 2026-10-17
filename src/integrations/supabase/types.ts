@@ -165,7 +165,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      record_practice: {
+        Args: {
+          p_completed: string
+          p_count_check?: boolean
+          p_id: string
+          p_minutes: number
+          p_tipo: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

@@ -29,6 +29,13 @@
       "when": 1792144847480,
       "tag": "0003_session_extra_time",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792231720889,
+      "tag": "0004_atomic_session_completion",
+      "breakpoints": true
     }
   ]
 }
