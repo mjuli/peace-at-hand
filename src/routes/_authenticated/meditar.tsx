@@ -303,7 +303,7 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
 
   async function applyExtra() {
     const extra = addedExtra(result.extraSec, addExtra);
-    if (extra > 0) await saveExtra(result.sessionId, result.minutes, extra);
+    if (result.extraSec >= 60) await saveExtra(result.sessionId, result.minutes, extra);
   }
 
   useEffect(() => {

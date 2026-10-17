@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { heatLevel, streaks, favoritePeriod, journeyEstimate, type SessionRow } from "./stats";
+import { heatLevel, streaks, favoritePeriod, journeyEstimate, minutesByDay, type SessionRow } from "./stats";
 import { earnedCodes } from "./achievements";
 
 const s = (iso: string, min = 5, nota: string | null = null): SessionRow => ({
@@ -9,6 +9,12 @@ const s = (iso: string, min = 5, nota: string | null = null): SessionRow => ({
 describe("stats", () => {
   it("heat levels", () => {
     expect([0, 5, 15, 25, 45].map(heatLevel)).toEqual([0, 1, 2, 3, 4]);
+  });
+  it("calendário usa o total com tempo extra", () => {
+    const session = { ...s("2026-10-01T12:00:00", 5), planned_minutes: 5, extra_seconds: 600 };
+    const minutes = minutesByDay([session]).get("2026-10-01") ?? 0;
+    expect(minutes).toBe(15);
+    expect(heatLevel(minutes)).toBe(2);
   });
   it("streak continues if today not practiced yet", () => {
     const days = new Set(["2026-10-12", "2026-10-13", "2026-10-14", "2026-10-01"]);
@@ -25,6 +31,11 @@ describe("stats", () => {
 });
 
 describe("achievements", () => {
+  it("conquistas por horas incluem o tempo extra", () => {
+    const session = { ...s("2026-10-01T12:00:00", 5), planned_minutes: 5, extra_seconds: 3300 };
+    expect(earnedCodes([session], []).has("horas_1")).toBe(true);
+    expect(earnedCodes([{ ...session, extra_seconds: 3299 }], []).has("horas_1")).toBe(false);
+  });
   it("first session, note, phase", () => {
     const c = earnedCodes([s("2026-10-01T10:00:00Z", 5, "oi")], [{ fase: 3, check_numero: 3 }]);
     expect(c.has("primeira_sessao")).toBe(true);
