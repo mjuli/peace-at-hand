@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { nextCheck } from "./journey";
+
 
 export interface ActiveCheck {
   id: string;
@@ -22,51 +22,21 @@ export const activeChecksQuery = queryOptions({
   },
 });
 
-async function countActive(): Promise<number> {
-  const { count, error } = await supabase
-    .from("checks")
-    .select("id", { count: "exact", head: true })
-    .is("reset_at", null);
-  if (error) throw error;
-  return count ?? 0;
-}
-
 /** Registra uma sessão. Para 'jornada', marca o próximo check; para 'manual', só se countCheck. */
 export async function recordSession(opts: {
   tipo: "jornada" | "livre" | "manual";
   durationMin: number;
   concluidaEm?: string;
   countCheck?: boolean;
+  sessionId?: string;
 }) {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) throw new Error("Sessão expirada");
-  const counts = opts.tipo === "jornada" || (opts.tipo === "manual" && !!opts.countCheck);
-  const next = counts ? nextCheck(await countActive()) : null;
-  const { data: session, error } = await supabase
-    .from("sessions")
-    .insert({
-      user_id: u.user.id,
-      tipo: opts.tipo,
-      duracao_min: opts.durationMin,
-      planned_minutes: opts.durationMin,
-      extra_seconds: 0,
-      concluida_em: opts.concluidaEm ?? new Date().toISOString(),
-      fase: opts.tipo === "jornada" ? (next?.phase ?? 30) : (next?.phase ?? null),
-      check_numero: next?.number ?? null,
-    })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.rpc("record_practice", {
+    p_id: opts.sessionId ?? crypto.randomUUID(), p_tipo: opts.tipo,
+    p_minutes: opts.durationMin, p_completed: opts.concluidaEm ?? new Date().toISOString(),
+    p_count_check: opts.countCheck ?? false,
+  });
   if (error) throw error;
-  if (next) {
-    const { error: e2 } = await supabase.from("checks").insert({
-      user_id: u.user.id,
-      fase: next.phase,
-      check_numero: next.number,
-      session_id: session.id,
-    });
-    if (e2) throw e2;
-  }
-  return { sessionId: session.id, next };
+  return data as { sessionId: string; next: { phase: number; number: number } | null };
 }
 
 export async function saveReflection(sessionId: string, humor: number | null, nota: string | null) {
