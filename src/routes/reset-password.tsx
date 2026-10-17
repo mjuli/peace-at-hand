@@ -6,7 +6,7 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Nova senha · Bambu" },
-      { name: "description", content: "Defina uma nova senha para sua conta Bambu." },
+      { name: "description", content: "Defina uma nova senha para sua conta Bambu." }, { property: "og:title", content: "Nova senha · Bambu" }, { property: "og:description", content: "Defina uma nova senha para sua conta Bambu." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ResetPassword,

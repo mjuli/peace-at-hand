@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/ajustes")({
-  head: () => ({ meta: [{ title: "Ajustes · Bambu" }, { name: "description", content: "Sons, sessão e jornada." }] }),
+  head: () => ({ meta: [{ title: "Ajustes · Bambu" }, { name: "description", content: "Sons, sessão e jornada." }, { property: "og:title", content: "Ajustes · Bambu" }, { property: "og:description", content: "Sons, sessão e jornada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Ajustes,
 });
 

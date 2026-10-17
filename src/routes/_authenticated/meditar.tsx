@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/meditar")({
-  head: () => ({ meta: [{ title: "Meditar · Bambu" }, { name: "description", content: "Sessão de meditação." }] }),
+  head: () => ({ meta: [{ title: "Meditar · Bambu" }, { name: "description", content: "Sessão de meditação." }, { property: "og:title", content: "Meditar · Bambu" }, { property: "og:description", content: "Sessão de meditação." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   validateSearch: z.object({
     tipo: z.enum(["jornada", "livre"]).catch("jornada").default("jornada"),
     min: z.coerce.number().int().min(1).max(120).optional().catch(undefined),
