@@ -213,7 +213,7 @@ function Meditar() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">Não foi possível salvar a sessão.</p>
-              <Button variant="ghost" onClick={() => void conclude()} className="mt-6 rounded-full bg-primary px-6 py-3 text-sm text-primary-foreground">
+              <Button variant="ghost" onClick={() => void conclude()} className="h-auto mt-6 rounded-full bg-primary px-6 py-3 text-sm text-primary-foreground">
                 Tentar de novo
               </Button>
             </>
@@ -241,13 +241,13 @@ function Meditar() {
         onClick={(e) => e.stopPropagation()}
       >
         {phase === "extra" ? (
-          <Button variant="ghost" onClick={() => void conclude()} className="mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
+          <Button variant="ghost" onClick={() => void conclude()} className="h-auto mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
             Concluir
           </Button>
         ) : (
           <>
         {phase !== "prep" && (
-          <Button variant="ghost" onClick={togglePause} className="mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
+          <Button variant="ghost" onClick={togglePause} className="h-auto mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground">
             {phase === "paused" ? "Retomar" : "Pausar"}
           </Button>
         )}
@@ -256,7 +256,7 @@ function Meditar() {
             if (phase === "running") togglePause();
             setConfirmEnd(true);
           }}
-          className="mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground"
+          className="h-auto mb-6 flex-1 rounded-full border border-border py-4 text-sm text-muted-foreground"
         >
           Encerrar
         </Button>
@@ -397,7 +397,7 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
               <p className="text-sm">Você meditou mais {extraMin} min além do planejado. Adicionar ao total?</p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {[true, false].map((v) => (
-                  <Button variant="ghost" key={String(v)} onClick={() => setAddExtra(v)} className={cn("rounded-full border py-3 text-sm", addExtra === v ? "border-sage bg-sage text-primary-foreground" : "border-border text-muted-foreground")}>
+                  <Button variant="ghost" key={String(v)} onClick={() => setAddExtra(v)} className={cn("h-auto rounded-full border py-3 text-sm", addExtra === v ? "border-sage bg-sage text-primary-foreground" : "border-border text-muted-foreground")}>
                     {v ? "Adicionar" : "Não adicionar"}
                   </Button>
                 ))}
@@ -431,13 +431,13 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
       )}
 
       <div className="fixed inset-x-6 bottom-8 mx-auto flex max-w-md gap-3 animate-fade-slow">
-        <Button variant="ghost" onClick={() => void skip()} disabled={saving} className="flex-1 rounded-full border border-border py-4 text-base text-muted-foreground disabled:opacity-60">
+        <Button variant="ghost" onClick={() => void skip()} disabled={saving} className="h-auto flex-1 rounded-full border border-border py-4 text-base text-muted-foreground disabled:opacity-60">
           Pular
         </Button>
         <Button variant="ghost"
           onClick={() => void save()}
           disabled={saving}
-          className="flex-1 rounded-full bg-primary py-4 text-base text-primary-foreground disabled:opacity-60"
+          className="h-auto flex-1 rounded-full bg-primary py-4 text-base text-primary-foreground disabled:opacity-60"
         >
           {saving ? "Salvando…" : "Salvar"}
         </Button>
