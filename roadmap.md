@@ -1,3 +1,5 @@
 - [x] Registrar conclusão planejada e tempo extra opcional, sem checks adicionais.
 - [x] Ajuste de contagem, pós-sessão e Histórico com duração total.
 - [x] Testes das regras e verificação do fluxo autenticado.
+- [ ] Migrar jornada para fases 1–30 preservando progresso antigo sem sessões fictícias.
+- [ ] Atualizar textos, conquistas, resets e estimativa; testar regras e fluxo autenticado.
