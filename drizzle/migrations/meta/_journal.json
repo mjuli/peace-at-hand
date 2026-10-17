@@ -36,6 +36,13 @@
       "when": 1792231720889,
       "tag": "0004_atomic_session_completion",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792232673104,
+      "tag": "0005_journey_from_phase_one",
+      "breakpoints": true
     }
   ]
 }

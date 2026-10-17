@@ -41,6 +41,7 @@ export type Database = {
           created_at: string
           fase: number
           id: string
+          is_legacy_credit: boolean
           reset_at: string | null
           session_id: string | null
           user_id: string
@@ -50,6 +51,7 @@ export type Database = {
           created_at?: string
           fase: number
           id?: string
+          is_legacy_credit?: boolean
           reset_at?: string | null
           session_id?: string | null
           user_id?: string
@@ -59,6 +61,7 @@ export type Database = {
           created_at?: string
           fase?: number
           id?: string
+          is_legacy_credit?: boolean
           reset_at?: string | null
           session_id?: string | null
           user_id?: string
