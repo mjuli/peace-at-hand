@@ -7,7 +7,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Entrar · Bambu" },
-      { name: "description", content: "Entre ou crie sua conta no Bambu." },
+      { name: "description", content: "Entre ou crie sua conta no Bambu." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "Entrar · Bambu" },
       { property: "og:description", content: "Entre ou crie sua conta no Bambu." },
     ],

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { formatMinutes, totalMinutes } from "@/lib/extra-time";
 
 export const Route = createFileRoute("/_authenticated/historico")({
-  head: () => ({ meta: [{ title: "Histórico · Bambu" }, { name: "description", content: "Seu histórico de práticas." }] }),
+  head: () => ({ meta: [{ title: "Histórico · Bambu" }, { name: "description", content: "Seu histórico de práticas." }, { property: "og:title", content: "Histórico · Bambu" }, { property: "og:description", content: "Seu histórico de práticas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Historico,
 });
 

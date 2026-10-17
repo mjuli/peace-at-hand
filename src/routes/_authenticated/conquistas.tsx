@@ -8,7 +8,7 @@ import { achievementsQuery, syncAchievements } from "@/lib/history-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/conquistas")({
-  head: () => ({ meta: [{ title: "Conquistas · Bambu" }, { name: "description", content: "Suas conquistas na jornada." }] }),
+  head: () => ({ meta: [{ title: "Conquistas · Bambu" }, { name: "description", content: "Suas conquistas na jornada." }, { property: "og:title", content: "Conquistas · Bambu" }, { property: "og:description", content: "Suas conquistas na jornada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Conquistas,
 });
 

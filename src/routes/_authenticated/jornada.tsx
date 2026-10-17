@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({
     meta: [
       { title: "Jornada · Bambu" },
-      { name: "description", content: "Sua jornada de meditação, fase a fase." },
+      { name: "description", content: "Sua jornada de meditação, fase a fase." }, { property: "og:title", content: "Jornada · Bambu" }, { property: "og:description", content: "Sua jornada de meditação, fase a fase." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Jornada,
