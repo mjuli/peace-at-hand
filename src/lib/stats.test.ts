@@ -28,6 +28,14 @@ describe("stats", () => {
     const today = new Date(2026, 9, 15);
     expect(journeyEstimate([new Date(2026, 9, 14).toISOString()], today)).toBeNull();
   });
+  it("estimativa usa 465 e créditos reduzem restante sem aumentar frequência", () => {
+    const today = new Date(2026, 9, 15);
+    const dates = [12, 13, 14].map((day) => new Date(2026, 9, day).toISOString());
+    const expected = new Date(2026, 9, 15 + 4590);
+    expect(journeyEstimate(dates, today, 6)).toEqual(expected);
+    expect(journeyEstimate(dates, today, 465)).toBeNull();
+    expect(journeyEstimate([], today, 3)).toBeNull();
+  });
 });
 
 describe("achievements", () => {
@@ -43,9 +51,15 @@ describe("achievements", () => {
     expect(c.has("primeira_fase")).toBe(true);
     expect(c.has("metade")).toBe(false);
   });
-  it("half journey at check 231", () => {
-    // checksBefore(22) = 228 → fase 22 check 3 = 231
-    expect(earnedCodes([], [{ fase: 22, check_numero: 3 }]).has("metade")).toBe(true);
-    expect(earnedCodes([], [{ fase: 22, check_numero: 2 }]).has("metade")).toBe(false);
+  it("metade exige 233 checks", () => {
+    // checksBefore(22) = 231 → fase 22 check 2 = 233
+    expect(earnedCodes([], [{ fase: 22, check_numero: 2 }]).has("metade")).toBe(true);
+    expect(earnedCodes([], [{ fase: 22, check_numero: 1 }]).has("metade")).toBe(false);
+  });
+  it("créditos não criam conquistas de prática nem métricas de sessões", () => {
+    const credits = [{ fase: 1, check_numero: 1, is_legacy_credit: true }, { fase: 2, check_numero: 1, is_legacy_credit: true }, { fase: 2, check_numero: 2, is_legacy_credit: true }];
+    expect([...earnedCodes([], credits)]).toEqual([]);
+    expect(minutesByDay([]).size).toBe(0);
+    expect(streaks(new Set(), new Date(2026, 9, 15))).toEqual({ current: 0, longest: 0 });
   });
 });

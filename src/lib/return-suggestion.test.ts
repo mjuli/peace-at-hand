@@ -18,8 +18,10 @@ describe("sugestão de retorno", () => {
   it("não aparece para quem nunca praticou", () => {
     expect(shouldSuggestReturn({ lastPracticeAt: null, dismissedAt: null, returnDays: 7, now })).toBe(false);
   });
-  it("voltar uma fase não passa da fase 3", () => {
+  it("voltar uma fase não passa da fase 1", () => {
     expect(previousPhase(7)).toBe(6);
-    expect(previousPhase(3)).toBe(3);
+    expect(previousPhase(3)).toBe(2);
+    expect(previousPhase(2)).toBe(1);
+    expect(previousPhase(1)).toBe(1);
   });
 });

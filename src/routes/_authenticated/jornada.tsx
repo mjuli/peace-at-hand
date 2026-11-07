@@ -181,7 +181,7 @@ function Jornada() {
         <AlertDialogContent className="rounded-3xl border-border bg-card">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-display text-2xl font-light">Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>A jornada volta para a fase 3. Seu histórico de sessões é mantido.</AlertDialogDescription>
+            <AlertDialogDescription>A jornada volta para a fase 1. Seu histórico de sessões é mantido.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>

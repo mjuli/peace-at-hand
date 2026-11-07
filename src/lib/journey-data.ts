@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { FIRST_PHASE } from "./journey";
 
 
 export interface ActiveCheck {
@@ -7,6 +8,7 @@ export interface ActiveCheck {
   fase: number;
   check_numero: number;
   created_at: string;
+  is_legacy_credit: boolean;
 }
 
 export const activeChecksQuery = queryOptions({
@@ -14,7 +16,7 @@ export const activeChecksQuery = queryOptions({
   queryFn: async (): Promise<ActiveCheck[]> => {
     const { data, error } = await supabase
       .from("checks")
-      .select("id, fase, check_numero, created_at")
+      .select("id, fase, check_numero, created_at, is_legacy_credit")
       .is("reset_at", null)
       .order("created_at", { ascending: true });
     if (error) throw error;
@@ -91,5 +93,5 @@ export async function resetFromPhase(phase: number) {
 }
 
 export async function resetAll() {
-  return resetFromPhase(3);
+  return resetFromPhase(FIRST_PHASE);
 }

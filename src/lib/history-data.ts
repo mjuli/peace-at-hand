@@ -28,7 +28,7 @@ export const achievementsQuery = queryOptions({
 export async function syncAchievements(qc?: QueryClient): Promise<AchievementDef[]> {
   const [sessions, checksRes, have] = await Promise.all([
     fetchSessions(),
-    supabase.from("checks").select("fase, check_numero").range(0, 9999),
+    supabase.from("checks").select("fase, check_numero, is_legacy_credit").range(0, 9999),
     supabase.from("achievements").select("codigo"),
   ]);
   if (checksRes.error) throw checksRes.error;

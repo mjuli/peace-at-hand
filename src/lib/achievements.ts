@@ -1,11 +1,12 @@
 // Definições e avaliação pura das conquistas.
-import { checksBefore } from "./journey";
+import { checksBefore, TOTAL_CHECKS } from "./journey";
 import { totalMinutes } from "./extra-time";
 import { dayKey, streaks, type SessionRow } from "./stats";
 
 export interface CheckRow {
   fase: number;
   check_numero: number;
+  is_legacy_credit?: boolean;
 }
 
 export interface AchievementDef {
@@ -21,7 +22,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { codigo: "min_15", nome: "Caule firme", descricao: "Chegue às sessões de 15 minutos" },
   { codigo: "min_20", nome: "Folhagem", descricao: "Chegue às sessões de 20 minutos" },
   { codigo: "min_25", nome: "Copa alta", descricao: "Chegue às sessões de 25 minutos" },
-  { codigo: "metade", nome: "Meio caminho", descricao: "Alcance 231 checks, metade da jornada" },
+  { codigo: "metade", nome: "Meio caminho", descricao: "Alcance 233 checks, metade da jornada" },
   { codigo: "jornada", nome: "Bambuzal", descricao: "Complete a jornada inteira" },
   { codigo: "seq_3", nome: "Raiz", descricao: "Pratique 3 dias seguidos" },
   { codigo: "seq_7", nome: "Rizoma", descricao: "Pratique 7 dias seguidos" },
@@ -50,10 +51,10 @@ export function earnedCodes(sessions: SessionRow[], checks: CheckRow[], today = 
   const longest = streaks(new Set(sessions.map((s) => dayKey(new Date(s.concluida_em)))), today).longest;
 
   add(n >= 1, "primeira_sessao");
-  add(checks.some((c) => c.check_numero === c.fase), "primeira_fase");
+  add(checks.some((c) => !c.is_legacy_credit && c.check_numero === c.fase), "primeira_fase");
   for (const m of [10, 15, 20, 25]) add(maxPhase >= m, `min_${m}`);
-  add(maxOrdinal >= 231, "metade");
-  add(maxOrdinal >= 462, "jornada");
+  add(maxOrdinal >= Math.ceil(TOTAL_CHECKS / 2), "metade");
+  add(maxOrdinal >= TOTAL_CHECKS, "jornada");
   for (const d of [3, 7, 30, 100, 365]) add(longest >= d, `seq_${d}`);
   for (const h of [1, 10, 50, 100]) add(minutes >= h * 60, `horas_${h}`);
   for (const s of [10, 50, 100, 250]) add(n >= s, `sessoes_${s}`);

@@ -88,8 +88,7 @@ export function favoritePeriod(sessions: SessionRow[]): DayPeriod | null {
 }
 
 /** Estimativa da data de chegar aos 30 min (fim da jornada) pela média de checks/dia dos últimos 30 dias. */
-export function journeyEstimate(activeCheckDates: string[], today: Date): Date | null {
-  const done = activeCheckDates.length;
+export function journeyEstimate(activeCheckDates: string[], today: Date, done = activeCheckDates.length): Date | null {
   if (done >= TOTAL_CHECKS) return null;
   const since = addDays(today, -29);
   const recent = activeCheckDates.map((d) => new Date(d)).filter((d) => d >= since);

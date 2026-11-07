@@ -16,7 +16,7 @@ import { activeChecksQuery, recordSession, saveExtra, saveReflection } from "@/l
 import { MAX_EXTRA_SECONDS, addedExtra, elapsedExtra } from "@/lib/extra-time";
 import { syncAchievements } from "@/lib/history-data";
 import type { AchievementDef } from "@/lib/achievements";
-import { nextDuration } from "@/lib/journey";
+import { nextDuration, TOTAL_CHECKS } from "@/lib/journey";
 import { playBell, startAmbient, unlockAudio, type AmbientHandle } from "@/lib/bell";
 import { settingsQuery } from "@/lib/settings";
 import { toast } from "sonner";
@@ -366,7 +366,7 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
         {journeyDone ? (
           <>
             <h1 className="mt-10 font-display text-5xl font-light">Jornada completa</h1>
-            <p className="mt-4 text-sm text-muted-foreground">462 checks. De 3 a 30 minutos. Seu bambu cresceu inteiro.</p>
+            <p className="mt-4 text-sm text-muted-foreground">{TOTAL_CHECKS} checks. 30 fases, de 1 a 30 minutos. Seu bambu cresceu inteiro.</p>
             <p className="mt-2 text-sm text-muted-foreground">Continue praticando com sessões de 30 minutos.</p>
           </>
         ) : result.tipo === "livre" ? (

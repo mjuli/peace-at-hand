@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { lastPracticeQuery, recordSession, resetFromPhase } from "@/lib/journey-data";
 import { saveSettings, settingsQuery } from "@/lib/settings";
 import { previousPhase, shouldSuggestReturn } from "@/lib/return-suggestion";
-import { nextCheck } from "@/lib/journey";
+import { FIRST_PHASE, nextCheck } from "@/lib/journey";
 
 const sheetCls = "rounded-t-3xl border-border bg-background px-6 pb-10";
 const inputCls =
@@ -171,7 +171,7 @@ export function ReturnBanner({ phase }: { phase: number }) {
         Faz um tempo desde a última prática. Se quiser, volte um pouco para retomar com calma.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        {phase > 3 && (
+        {phase > FIRST_PHASE && (
           <button disabled={busy} onClick={() => void choose("back")} className={btn}>
             Voltar uma fase
           </button>

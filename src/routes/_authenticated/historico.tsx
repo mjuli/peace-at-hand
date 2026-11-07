@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Frown, Meh, Smile, Annoyed, Laugh } from "lu
 import { TabShell } from "@/components/TabShell";
 import { allSessionsQuery } from "@/lib/history-data";
 import { activeChecksQuery } from "@/lib/journey-data";
-import { progressFromCount } from "@/lib/journey";
+import { progressFromCount, TOTAL_CHECKS } from "@/lib/journey";
 import { avgDaysPerWeek, dayKey, favoritePeriod, heatLevel, journeyEstimate, minutesByDay, streaks } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import { formatMinutes, totalMinutes } from "@/lib/extra-time";
@@ -32,7 +32,7 @@ function Historico() {
   const st = streaks(days, today);
   const totalMin = sessions.reduce((s, x) => s + totalMinutes(x), 0);
   const prog = progressFromCount(checks.length);
-  const est = journeyEstimate(checks.map((c) => c.created_at), today);
+  const est = journeyEstimate(checks.filter((c) => !c.is_legacy_credit).map((c) => c.created_at), today, checks.length);
   const period = favoritePeriod(sessions);
 
   const first = month.getDay();
@@ -106,7 +106,7 @@ function Historico() {
           <Card label="Maior sequência" value={`${st.longest} ${st.longest === 1 ? "dia" : "dias"}`} />
           <Card label="Tempo total" value={`${formatMinutes(totalMin)} min`} sub={`${(totalMin / 60).toFixed(1).replace(".", ",")} horas`} />
           <Card label="Sessões" value={String(sessions.length)} />
-          <Card label="Jornada" value={`${prog.percent}%`} sub={`${prog.totalDone} de 462 checks`} />
+          <Card label="Jornada" value={`${prog.percent}%`} sub={`${prog.totalDone} de ${TOTAL_CHECKS} checks`} />
           <Card label="Dias por semana" value={avgDaysPerWeek(days, today).toFixed(1).replace(".", ",")} sub="em média" />
           <Card label="Período preferido" value={period ? period.charAt(0).toUpperCase() + period.slice(1) : "—"} />
           <Card

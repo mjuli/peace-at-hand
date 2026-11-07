@@ -1,8 +1,8 @@
-// Regras da jornada Bambu: fase N = N minutos e N checks, de 3 a 30.
-export const FIRST_PHASE = 3;
+// Regras da jornada Bambu: fase N = N minutos e N checks, de 1 a 30.
+export const FIRST_PHASE = 1;
 export const LAST_PHASE = 30;
 export const PHASES = Array.from({ length: LAST_PHASE - FIRST_PHASE + 1 }, (_, i) => i + FIRST_PHASE);
-export const TOTAL_CHECKS = PHASES.reduce((s, p) => s + p, 0); // 462
+export const TOTAL_CHECKS = PHASES.reduce((s, p) => s + p, 0); // 465
 
 /** Checks acumulados antes do início da fase. */
 export function checksBefore(phase: number): number {

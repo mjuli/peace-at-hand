@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 type Kind = "undo" | "phase" | "all" | null;
 
-export function ResetActions({ currentPhase, onDone }: { currentPhase: number; onDone?: () => void }) {
+export function ResetActions({ onDone }: { currentPhase: number; onDone?: () => void }) {
   const qc = useQueryClient();
   const [kind, setKind] = useState<Kind>(null);
   const [phase, setPhase] = useState<number | null>(null);
@@ -52,7 +52,7 @@ export function ResetActions({ currentPhase, onDone }: { currentPhase: number; o
     kind === "undo"
       ? "Apenas o check mais recente será desmarcado."
       : kind === "all"
-        ? "Seu progresso volta para a fase 3. Seu histórico de sessões é mantido."
+        ? "Seu progresso volta para a fase 1. Seu histórico de sessões é mantido."
         : "Escolha a fase. O progresso volta para o início dela; o histórico de sessões é mantido.";
 
   return (
@@ -79,7 +79,7 @@ export function ResetActions({ currentPhase, onDone }: { currentPhase: number; o
           </AlertDialogHeader>
           {kind === "phase" && (
             <div className="grid grid-cols-7 gap-2 py-2">
-              {PHASES.filter((p) => p <= currentPhase).map((p) => (
+              {PHASES.map((p) => (
                 <button
                   key={p}
                   onClick={() => setPhase(p)}

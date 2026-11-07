@@ -6,9 +6,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Bambu — Meditação que cresce com você" },
-      { name: "description", content: "28 fases, de 3 a 30 minutos. Uma jornada de meditação progressiva." },
+      { name: "description", content: "30 fases, de 1 a 30 minutos. Uma jornada de meditação progressiva." },
       { property: "og:title", content: "Bambu — Meditação que cresce com você" },
-      { property: "og:description", content: "28 fases, de 3 a 30 minutos. Uma jornada de meditação progressiva." },
+      { property: "og:description", content: "30 fases, de 1 a 30 minutos. Uma jornada de meditação progressiva." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -28,7 +28,7 @@ function Index() {
         <img src="/icon-192.png" alt="" width={64} height={64} className="h-16 w-16 rounded-2xl" />
         <h1 className="mt-10 font-display text-6xl font-light leading-none">Bambu</h1>
         <p className="mt-6 max-w-xs text-base text-muted-foreground">
-          28 fases, de 3 a 30 minutos. Um gomo de cada vez.
+          30 fases, de 1 a 30 minutos. Um gomo de cada vez.
         </p>
       </div>
       <Link
