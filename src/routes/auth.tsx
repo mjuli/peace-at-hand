@@ -79,7 +79,7 @@ function AuthPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pt-20 pb-safe">
       <div className="animate-rise">
-        <img src="/icon-192.png" alt="" width={56} height={56} className="h-14 w-14 rounded-2xl" />
+        <img src="/icon-192.png?v=2" alt="" width={56} height={56} className="h-14 w-14 rounded-2xl" />
         <h1 className="mt-8 font-display text-4xl font-light">{title}</h1>
       </div>
 

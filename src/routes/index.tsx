@@ -25,7 +25,7 @@ function Index() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pt-24 pb-safe">
       <div className="animate-rise">
-        <img src="/icon-192.png" alt="" width={64} height={64} className="h-16 w-16 rounded-2xl" />
+        <img src="/icon-192.png?v=2" alt="" width={64} height={64} className="h-16 w-16 rounded-2xl" />
         <h1 className="mt-10 font-display text-6xl font-light leading-none">Bambu</h1>
         <p className="mt-6 max-w-xs text-base text-muted-foreground">
           30 fases, de 1 a 30 minutos. Um gomo de cada vez.
