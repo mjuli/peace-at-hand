@@ -20,7 +20,7 @@ import { nextDuration, TOTAL_CHECKS } from "@/lib/journey";
 import { playBell, startAmbient, unlockAudio, type AmbientHandle } from "@/lib/bell";
 import { settingsQuery } from "@/lib/settings";
 import { toast } from "sonner";
-import { Frown, Meh, Smile, Annoyed, Laugh } from "lucide-react";
+import { Frown, Meh, Smile, Annoyed, Laugh, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -300,6 +300,7 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
   const [saving, setSaving] = useState(false);
   const extraMin = Math.floor(result.extraSec / 60);
   const [addExtra, setAddExtra] = useState(true);
+  const [late, setLate] = useState<AchievementDef[]>([]);
 
   async function applyExtra() {
     const extra = addedExtra(result.extraSec, addExtra);
@@ -317,8 +318,8 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
       await applyExtra();
       if (humor != null || nota.trim()) await saveReflection(result.sessionId, humor, nota.trim() || null);
       const extra = await syncAchievements().catch(() => [] as AchievementDef[]);
-      extra.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao }));
-      onBack();
+      if (extra.length) setLate(extra);
+      else onBack();
     } catch {
       toast.error("Não foi possível salvar. Tente de novo.");
       setSaving(false);
@@ -330,36 +331,34 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
     try {
       await applyExtra();
       const extra = await syncAchievements().catch(() => [] as AchievementDef[]);
-      extra.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao }));
-      onBack();
+      if (extra.length) setLate(extra);
+      else onBack();
     } catch {
       toast.error("Não foi possível salvar. Tente de novo.");
       setSaving(false);
     }
   }
 
+  if (late.length) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-y-auto bg-background px-8 pb-32 text-center">
+        <Ripples />
+        <div className="relative w-full max-w-sm">
+          <AchievementCelebration list={late} />
+        </div>
+        <div className="fixed inset-x-6 bottom-8 mx-auto flex max-w-md animate-fade-slow">
+          <Button variant="ghost" onClick={onBack} className="h-auto flex-1 rounded-full bg-primary py-4 text-base text-primary-foreground">
+            Continuar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center overflow-y-auto bg-background px-8 pt-[14vh] pb-40 text-center">
-      {(phaseDone || journeyDone) && (
-        <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="absolute h-56 w-56 rounded-full border border-sage animate-ripple"
-              style={{ animationDelay: `${i * 1}s` }}
-            />
-          ))}
-        </div>
-      )}
+      {(phaseDone || journeyDone || result.unlocked.length > 0) && <Ripples />}
       <div className="relative animate-rise">
-        {result.unlocked.length > 0 && (
-          <div className="mx-auto mb-8 max-w-xs rounded-2xl border border-sage/40 px-4 py-3 text-sm animate-fade-slow">
-            <p className="text-[11px] tracking-wide text-sage">Conquista desbloqueada</p>
-            {result.unlocked.map((a) => (
-              <p key={a.codigo} className="mt-1 font-display text-xl font-light">{a.nome}</p>
-            ))}
-          </div>
-        )}
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-sage text-3xl text-sage glow-sage">
           ✓
         </div>
@@ -389,6 +388,12 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
           <p className="mt-10 text-lg">Sessão de 30 minutos registrada ✓</p>
         )}
       </div>
+
+      {result.unlocked.length > 0 && (
+        <div className="relative mt-10 w-full max-w-sm">
+          <AchievementCelebration list={result.unlocked} />
+        </div>
+      )}
 
       {showReflect && (
         <div className="relative mt-12 w-full max-w-sm animate-rise">
@@ -442,6 +447,42 @@ function PostSession({ result, onBack }: { result: Result; onBack: () => void })
           {saving ? "Salvando…" : "Salvar"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function Ripples() {
+  return (
+    <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="absolute h-56 w-56 rounded-full border border-sage animate-ripple"
+          style={{ animationDelay: `${i * 1}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Destaque das conquistas desbloqueadas ao fim da sessão. */
+function AchievementCelebration({ list }: { list: AchievementDef[] }) {
+  return (
+    <div className="animate-rise rounded-3xl border border-sage/50 bg-card/80 px-5 py-6 backdrop-blur-sm" role="status">
+      <p className="text-[11px] uppercase tracking-[0.3em] text-sage">
+        {list.length > 1 ? "Novas conquistas" : "Nova conquista"}
+      </p>
+      <ul className="mt-5 space-y-5">
+        {list.map((a) => (
+          <li key={a.codigo} className="flex flex-col items-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-sage text-sage glow-sage">
+              <Award className="h-6 w-6" strokeWidth={1.4} />
+            </span>
+            <p className="mt-3 font-display text-2xl font-light leading-tight">{a.nome}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{a.descricao}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

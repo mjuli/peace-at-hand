@@ -5,6 +5,7 @@ import { Award, Lock } from "lucide-react";
 import { TabShell } from "@/components/TabShell";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import { achievementsQuery, syncAchievements } from "@/lib/history-data";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/conquistas")({
@@ -16,7 +17,9 @@ function Conquistas() {
   const qc = useQueryClient();
   const { data = [] } = useQuery(achievementsQuery);
   useEffect(() => {
-    void syncAchievements(qc).catch(() => {});
+    void syncAchievements(qc)
+      .then((list) => list.forEach((a) => toast(`Conquista desbloqueada: ${a.nome}`, { description: a.descricao })))
+      .catch(() => {});
   }, [qc]);
   const got = new Map(data.map((a) => [a.codigo, a.desbloqueada_em]));
   const n = ACHIEVEMENTS.filter((a) => got.has(a.codigo)).length;
